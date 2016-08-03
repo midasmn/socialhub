@@ -1,7 +1,7 @@
 <?php
 require_once("lib/lib.php");
 require_once("lib/mysql-ini.php");
-require_once("lib/twitter.php");
+require_once("lib/twitterR.php");
 
 $page = isset($_GET['page']) ? $_GET['page'] : 1;
 $target_page = isset($_GET['target_page']) ? $_GET['target_page'] : 'search-advanced.php';
@@ -25,23 +25,142 @@ if ( isset($_REQUEST['language_id']) ) {
   $language_id= 9; // 日本
 }
 
-$mode=$_POST['mode'];
-if(!$mode){
-  $mode=$_GET['mode'];
-}
-$search_tag=$_POST['search_tag'];
-if(!$search_tag){
-  $search_tag=$_GET['search_tag'];
-}
+// パラメータ
+$ands = isset($_GET['ands']) ? $_GET['ands'] : "";
+$ands = str_replace("　", " ", $ands);
+$phrase = isset($_GET['phrase']) ? $_GET['phrase'] : "";
+$phrase = str_replace("　", " ", $phrase);
+$ors = isset($_GET['ors']) ? $_GET['ors'] : "";
+$ors = str_replace("　", " ", $ors);
+$nots = isset($_GET['nots']) ? $_GET['nots'] : "";
+$nots = str_replace("　", " ", $nots);
+$tag = isset($_GET['tag']) ? $_GET['tag'] : "";
+$tag = str_replace("　", " ", $tag);
 
-if($mode=="search_tag"||$page)
+$lang = isset($_GET['lang']) ? $_GET['lang'] : "";
+
+$min_retweets = isset($_GET['min_retweets']) ? $_GET['min_retweets'] : "";
+$min_faves = isset($_GET['min_faves']) ? $_GET['min_faves'] : "";
+$min_replies = isset($_GET['min_replies']) ? $_GET['min_replies'] : "";
+
+$from = isset($_GET['from']) ? $_GET['from'] : "";
+$to = isset($_GET['to']) ? $_GET['to'] : "";
+$ref = isset($_GET['ref']) ? $_GET['ref'] : "";
+
+$place_id = isset($_GET['place_id']) ? $_GET['place_id'] : "";
+$within = isset($_GET['within']) ? $_GET['within'] : "";
+$units = isset($_GET['units']) ? $_GET['units'] : "";
+
+$since = isset($_GET['since']) ? $_GET['since'] : "";
+$until = isset($_GET['until']) ? $_GET['until'] : "";
+
+$filter = isset($_GET['filter']) ? $_GET['filter'] : "";   
+$attd = isset($_GET['attd']) ? $_GET['attd'] : "";    
+
+$mode = isset($_GET['mode']) ? $_GET['mode'] : "";    
+if($mode=="go")
 {
-  if($search_tag)
-  {
-    $search_tag = f_twitter_tag($db_conn,$search_tag);
-    $sns_id = 1;
-    $rtn_ifream_st = f_get_img_page($db_conn,$page_size,$page,$target_page,$search_tag);
-  }
+    $cnt = 100;
+    // 
+    $q_st = "";
+    $q_st .= $ands;//AND検索
+    if($phrase){$q_st .= ' "'.$phrase.'" ';}//厳密
+    if($ors)//OR検索
+    {
+      $i=1;
+      $ors_arr = explode( ' ', $ors );
+      foreach($ors_arr as $or_itm)
+      { 
+        if($i==1){
+          $q_st .= $or_itm;
+        }else{
+          $q_st .= ' OR '.$or_itm;
+        }
+        $i++;
+      }
+    }
+    if($nots)//除外
+    {
+      $nots_arr = explode( ' ', $nots );
+      foreach($nots_arr as $nots_itm)
+      { 
+        $q_st .= ' -'.$nots_itm;
+      }
+    }
+    if($tag)//ハッシュタグ
+    {
+      $q_st .= ' '.$tag;
+    }
+    
+    // 
+    if(is_numeric($min_retweets)&&$min_retweets>0)//リツィート数  
+    {
+      $q_st .= ' min_retweets:'.$min_retweets;
+    }
+    if(is_numeric($min_faves)&&$min_faves>0)//お気に入り数  
+    {
+      $q_st .= ' min_faves:'.$min_faves;
+    }
+    if(is_numeric($min_replies)&&$min_replies>0)//リプライ
+    {
+      $q_st .= ' min_replies:'.$min_replies;
+    }
+    // 
+    if($ref)//スクリーンネーム
+    {
+      if(strpos($ref,'@')===false){
+        $q_st .= ' @'.$ref;
+      }else{
+        $q_st .= ' '.$ref;
+      }
+    }
+    if($from)//ユーザーあてリプライ
+    {
+      if(strpos($from,'@')===false){
+        $q_st .= ' from:@'.$from;
+      }else{
+        $q_st .= ' from:'.$from;
+      }
+    }
+    if($to)//ユーザーあてリプライ
+    {
+      if(strpos($to,'@')===false){
+        $q_st .= ' to:@'.$to;
+      }else{
+        $q_st .= ' to:'.$to;
+      }
+    }
+
+    if($since)//日付
+    {
+      $q_st .= ' since:'.$since;
+    }
+    if($until)//日付
+    {
+      $q_st .= ' until:'.$until;
+    }
+    if($filter)//filter
+    {
+      foreach($filter as $filter_itm)
+      { 
+        $q_st .= ' filter:'.$filter_itm;
+      }
+    }
+
+    if($attd)//attd
+    {
+      foreach($attd as $attd_itm)
+      { 
+        $q_st .= ' '.$attd_itm;
+      }
+    }
+    $options = ['q' => $q_st, 'lang'=>$lang ,'count' => $cnt , 'result_type'=>'mixed'];//言語
+    echo  "<br>options=".var_dump($options);
+
+    // $search_tag = f_twitter_api($db_conn,$search_tag);
+
+    // $sns_id = 1;
+    // $rtn_ifream_st = f_get_img_page($db_conn,$page_size,$page,$target_page,$search_tag);
 }
 
 if($search_tag){
@@ -99,10 +218,9 @@ $rtn_tab2 = "favicon-192x192.png";
         <!-- .タイトル -->
     </div>
 
-    
     <div class="row col-md-12 " style="margin-top: 20px;">
     <!-- 検索窓 -->
-      <form class="t1-form twitter-form">
+      <form class="t1-form twitter-form" method="GET">
         <legend class="t1-legend"><span>キーワード（複数の場合は半角スペースで区切る）</span></legend>
         <div class="form-group">
             <div class="input-group input-group-lg">
@@ -144,8 +262,6 @@ $rtn_tab2 = "favicon-192x192.png";
             <input type="text" class="form-control" placeholder="次のハッシュタグを含む" name="tag" >
             </div>
         </div>
-
-
         <legend class="t1-legend"><span>使用言語</span></legend>
         <div class="form-group">
             <div class="input-group input-group-lg">
@@ -160,15 +276,13 @@ $rtn_tab2 = "favicon-192x192.png";
               </select>
             </div>
       </div>
-
-
       <legend class="t1-legend"><span>ツィート（入力数字以上を検索）</span></legend>
       <div class="form-group">
           <div class="input-group input-group-lg">
             <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
             </span> 
-            <input type="text" class="form-control" placeholder="リツィート数" name="min_retweets:" >
+            <input type="text" class="form-control" placeholder="リツィート数" name="min_retweets" >
           </div>
       </div>
       <div class="form-group">
@@ -176,7 +290,7 @@ $rtn_tab2 = "favicon-192x192.png";
             <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
             </span> 
-            <input type="text" class="form-control" placeholder="お気に入り数" name="min_faves:" >
+            <input type="text" class="form-control" placeholder="お気に入り数" name="min_faves" >
           </div>
       </div>
       <div class="form-group">
@@ -184,12 +298,9 @@ $rtn_tab2 = "favicon-192x192.png";
             <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
             </span> 
-            <input type="text" class="form-control" placeholder="リプライ数" name="min_replies:" >
+            <input type="text" class="form-control" placeholder="リプライ数" name="min_replies" >
           </div>
       </div>
-
-
-
       <legend class="t1-legend"><span>ユーザー名</span></legend>
       <div class="form-group">
           <div class="input-group input-group-lg">
@@ -215,13 +326,7 @@ $rtn_tab2 = "favicon-192x192.png";
             <input type="text" class="form-control" placeholder="次のアカウントへの@ツイート" name="ref" >
           </div>
       </div>
-
-
-
-
-
-
-      <legend class="t1-legend"><span>場所</span></legend>
+  <!--     <legend class="t1-legend"><span>場所</span></legend>
       <div class="form-group">
           <div class="input-group input-group-lg">
             <span class="input-group-addon">
@@ -260,7 +365,7 @@ $rtn_tab2 = "favicon-192x192.png";
               </label>
             </div>
           </div>
-        </div>
+        </div> -->
       <legend class="t1-legend"><span>日付</span></legend>
       <div class="form-group">
           <div class="input-group input-group-lg">
@@ -273,25 +378,25 @@ $rtn_tab2 = "favicon-192x192.png";
             </span>
             <input type="text" id="until" class="form-control" placeholder="YYYY-MM-DD" name="until"  >
           </div>
-      </div>
+      </div>    
       <legend class="t1-legend"><span>フィルター</span></legend>
       <div class="form-group">
           <div class="input-group input-group-lg">
             <div class="btn-group" data-toggle="buttons">
               <label class="btn  btn-lg btn-default ">
-                <input type="checkbox" autocomplete="off" name="filter" value="filter:images" >画像
+                <input type="checkbox" autocomplete="off" name="filter[]" value="images" >画像
               </label>
               <label class="btn  btn-lg btn-default">
-                <input type="checkbox" autocomplete="off" name="filter" value="filter:videos" >動画
+                <input type="checkbox" autocomplete="off" name="filter[]" value="videos" >動画
               </label>
               <label class="btn  btn-lg btn-default">
-                <input type="checkbox" autocomplete="off" name="filter" value="filter:links" >リンク
+                <input type="checkbox" autocomplete="off" name="filter[]" value="links" >リンク
               </label>
               <label class="btn  btn-lg btn-default">
-                <input type="checkbox" autocomplete="off" name="filter" value="filter:verifled" >認証アカウント
+                <input type="checkbox" autocomplete="off" name="filter[]" value="verifled" >認証アカウント
               </label>
               <label class="btn  btn-lg btn-default">
-                <input type="checkbox" autocomplete="off" name="filter" value="filter:vine" >Vine
+                <input type="checkbox" autocomplete="off" name="filter[]" value="vine" >Vine
               </label>
             </div>
           </div>
@@ -301,16 +406,16 @@ $rtn_tab2 = "favicon-192x192.png";
           <div class="input-group input-group-lg">
             <div class="btn-group" data-toggle="buttons">
               <label class="btn  btn-lg btn-default ">
-                <input type="checkbox" autocomplete="off" name="attd" value=":)" >ポジティブ
+                <input type="checkbox" autocomplete="off" name="attd[]" value=":)" >ポジティブ
               </label>
               <label class="btn  btn-lg btn-default">
-                <input type="checkbox" autocomplete="off" name="attd" value=":(" >ネガティブ
+                <input type="checkbox" autocomplete="off" name="attd[]" value=":(" >ネガティブ
               </label>
               <label class="btn  btn-lg btn-default">
-                <input type="checkbox" autocomplete="off" name="attd" value="?" >疑問形
+                <input type="checkbox" autocomplete="off" name="attd[]" value="?" >疑問形
               </label>
               <label class="btn  btn-lg btn-default">
-                <input type="checkbox" autocomplete="off" name="attd" value="retweets" >リツイートを含む
+                <input type="checkbox" autocomplete="off" name="attd[]" value="retweets" >リツイートを含む
               </label>
             </div>
           </div>
@@ -319,7 +424,7 @@ $rtn_tab2 = "favicon-192x192.png";
       <hr>
       <div class="form-group">
         <div class="col-sm-offset-2 col-sm-10">
-          <input type="hidden" name="ref" value="go">
+          <input type="hidden" name="mode" value="go">
             <button id="btn_update" type="submit" class="btn btn-lg btn-danger btn-block">検索</button>
         </div>
       </div>
