@@ -144,6 +144,8 @@ $rtn_tab2 = "favicon-192x192.png";
             <input type="text" class="form-control" placeholder="次のハッシュタグを含む" name="tag" >
             </div>
         </div>
+
+
         <legend class="t1-legend"><span>使用言語</span></legend>
         <div class="form-group">
             <div class="input-group input-group-lg">
@@ -158,6 +160,36 @@ $rtn_tab2 = "favicon-192x192.png";
               </select>
             </div>
       </div>
+
+
+      <legend class="t1-legend"><span>ツィート（入力数字以上を検索）</span></legend>
+      <div class="form-group">
+          <div class="input-group input-group-lg">
+            <span class="input-group-addon">
+              <span class="glyphicon glyphicon-pencil"></span>
+            </span> 
+            <input type="text" class="form-control" placeholder="リツィート数" name="min_retweets:" >
+          </div>
+      </div>
+      <div class="form-group">
+          <div class="input-group input-group-lg">
+            <span class="input-group-addon">
+              <span class="glyphicon glyphicon-pencil"></span>
+            </span> 
+            <input type="text" class="form-control" placeholder="お気に入り数" name="min_faves:" >
+          </div>
+      </div>
+      <div class="form-group">
+          <div class="input-group input-group-lg">
+            <span class="input-group-addon">
+              <span class="glyphicon glyphicon-pencil"></span>
+            </span> 
+            <input type="text" class="form-control" placeholder="リプライ数" name="min_replies:" >
+          </div>
+      </div>
+
+
+
       <legend class="t1-legend"><span>ユーザー名</span></legend>
       <div class="form-group">
           <div class="input-group input-group-lg">
@@ -183,6 +215,12 @@ $rtn_tab2 = "favicon-192x192.png";
             <input type="text" class="form-control" placeholder="次のアカウントへの@ツイート" name="ref" >
           </div>
       </div>
+
+
+
+
+
+
       <legend class="t1-legend"><span>場所</span></legend>
       <div class="form-group">
           <div class="input-group input-group-lg">
@@ -236,6 +274,28 @@ $rtn_tab2 = "favicon-192x192.png";
             <input type="text" id="until" class="form-control" placeholder="YYYY-MM-DD" name="until"  >
           </div>
       </div>
+      <legend class="t1-legend"><span>フィルター</span></legend>
+      <div class="form-group">
+          <div class="input-group input-group-lg">
+            <div class="btn-group" data-toggle="buttons">
+              <label class="btn  btn-lg btn-default ">
+                <input type="checkbox" autocomplete="off" name="filter" value="filter:images" >画像
+              </label>
+              <label class="btn  btn-lg btn-default">
+                <input type="checkbox" autocomplete="off" name="filter" value="filter:videos" >動画
+              </label>
+              <label class="btn  btn-lg btn-default">
+                <input type="checkbox" autocomplete="off" name="filter" value="filter:links" >リンク
+              </label>
+              <label class="btn  btn-lg btn-default">
+                <input type="checkbox" autocomplete="off" name="filter" value="filter:verifled" >認証アカウント
+              </label>
+              <label class="btn  btn-lg btn-default">
+                <input type="checkbox" autocomplete="off" name="filter" value="filter:vine" >Vine
+              </label>
+            </div>
+          </div>
+      </div>
       <legend class="t1-legend"><span>その他</span></legend>
       <div class="form-group">
           <div class="input-group input-group-lg">
@@ -254,7 +314,7 @@ $rtn_tab2 = "favicon-192x192.png";
               </label>
             </div>
           </div>
-        </div>
+      </div>
       <!-- ボタン -->
       <hr>
       <div class="form-group">
