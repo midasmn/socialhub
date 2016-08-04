@@ -45,9 +45,10 @@ $min_replies = isset($_GET['min_replies']) ? $_GET['min_replies'] : "";
 
 $from = isset($_GET['from']) ? $_GET['from'] : "";
 $to = isset($_GET['to']) ? $_GET['to'] : "";
-$ref = isset($_GET['ref']) ? $_GET['ref'] : "";
+$name = isset($_GET['name']) ? $_GET['name'] : "";
 
-$place_id = isset($_GET['place_id']) ? $_GET['place_id'] : "";
+$near = isset($_GET['near']) ? $_GET['near'] : "";
+$near = str_replace("　", " ", $near);
 $within = isset($_GET['within']) ? $_GET['within'] : "";
 $units = isset($_GET['units']) ? $_GET['units'] : "";
 
@@ -60,6 +61,7 @@ $attd = isset($_GET['attd']) ? $_GET['attd'] : "";
 $mode = isset($_GET['mode']) ? $_GET['mode'] : "";    
 if($mode=="go")
 {
+    $options = array();
     $cnt = 100;
     // 
     $q_st = "";
@@ -91,7 +93,6 @@ if($mode=="go")
     {
       $q_st .= ' '.$tag;
     }
-    
     // 
     if(is_numeric($min_retweets)&&$min_retweets>0)//リツィート数  
     {
@@ -106,12 +107,12 @@ if($mode=="go")
       $q_st .= ' min_replies:'.$min_replies;
     }
     // 
-    if($ref)//スクリーンネーム
+    if($name)//スクリーンネーム
     {
-      if(strpos($ref,'@')===false){
-        $q_st .= ' @'.$ref;
+      if(strpos($name,'@')===false){
+        $q_st .= ' @'.$name;
       }else{
-        $q_st .= ' '.$ref;
+        $q_st .= ' '.$name;
       }
     }
     if($from)//ユーザーあてリプライ
@@ -141,10 +142,19 @@ if($mode=="go")
     }
     if($filter)//filter
     {
+      $filter_itm_st = "";
+      $i=1;
       foreach($filter as $filter_itm)
       { 
-        $q_st .= ' filter:'.$filter_itm;
+        if($i==1)
+        {
+          $filter_itm_st .= $filter_itm;
+        }else{
+          $filter_itm_st .= ' '.$filter_itm;
+        }
+        $i++;
       }
+      $q_st .= ' filter:'.$filter_itm_st;
     }
 
     if($attd)//attd
@@ -154,13 +164,36 @@ if($mode=="go")
         $q_st .= ' '.$attd_itm;
       }
     }
+    // 
+    if($near)//attd
+    {
+      $near_arr = explode( ' ', $near );
+      $near_itm_st = "";
+      $i=1;
+      foreach($near_arr as $near_itm)
+      { 
+        if($i==1)
+        {
+          $near_itm_st .= $near_itm;
+        }else{
+          $near_itm_st .= ' '.$near_itm;
+        }
+        $i++;
+      }
+      $q_st .= ' near:'.$near_itm_st;
+    }
+    if($within)
+    {
+        $q_st .= ' within:'.$within.$units;
+    }
+
+    // echo  "<br>".$q_st;
     $options = ['q' => $q_st, 'lang'=>$lang ,'count' => $cnt , 'result_type'=>'mixed'];//言語
-    echo  "<br>options=".var_dump($options);
+    echo  "<!-- options=".var_dump($options)."-->";
 
-    // $search_tag = f_twitter_api($db_conn,$search_tag);
 
-    // $sns_id = 1;
-    // $rtn_ifream_st = f_get_img_page($db_conn,$page_size,$page,$target_page,$search_tag);
+    $statuses = f_twitter_api($db_conn,$options);//twitterAPI
+    $rtn_st = f_disp_result($statuses);//表示
 }
 
 if($search_tag){
@@ -227,7 +260,7 @@ $rtn_tab2 = "favicon-192x192.png";
               <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
               </span> 
-            <input type="text" class="form-control" placeholder="次のキーワードをすべて含む" name="ands" >
+            <input type="text" class="form-control" placeholder="次のキーワードをすべて含む" name="ands" value="<?=$ands?>" >
             </div>
         </div>
         <div class="form-group">
@@ -235,7 +268,7 @@ $rtn_tab2 = "favicon-192x192.png";
               <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
               </span> 
-            <input type="text" class="form-control" placeholder="次のキーワード全体を含む" name="phrase" >
+            <input type="text" class="form-control" placeholder="次のキーワード全体を含む" name="phrase"  value="<?=$phrase?>" >
             </div>
         </div>
         <div class="form-group">
@@ -243,7 +276,7 @@ $rtn_tab2 = "favicon-192x192.png";
               <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
               </span> 
-            <input type="text" class="form-control" placeholder="次のキーワードのいずれかを含む" name="ors" >
+            <input type="text" class="form-control" placeholder="次のキーワードのいずれかを含む" name="ors"  value="<?=$ors?>" >
             </div>
         </div>
         <div class="form-group">
@@ -251,7 +284,7 @@ $rtn_tab2 = "favicon-192x192.png";
               <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
               </span> 
-            <input type="text" class="form-control" placeholder="次のキーワードを含まない" name="nots" >
+            <input type="text" class="form-control" placeholder="次のキーワードを含まない" name="nots"  value="<?=$nots?>" >
             </div>
         </div>
         <div class="form-group">
@@ -259,7 +292,7 @@ $rtn_tab2 = "favicon-192x192.png";
               <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
               </span> 
-            <input type="text" class="form-control" placeholder="次のハッシュタグを含む" name="tag" >
+            <input type="text" class="form-control" placeholder="次のハッシュタグを含む" name="tag"  value="<?=$tag?>" >
             </div>
         </div>
         <legend class="t1-legend"><span>使用言語</span></legend>
@@ -282,7 +315,7 @@ $rtn_tab2 = "favicon-192x192.png";
             <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
             </span> 
-            <input type="text" class="form-control" placeholder="リツィート数" name="min_retweets" >
+            <input type="text" class="form-control" placeholder="リツィート数" name="min_retweets"  value="<?=$min_retweets?>" >
           </div>
       </div>
       <div class="form-group">
@@ -290,7 +323,7 @@ $rtn_tab2 = "favicon-192x192.png";
             <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
             </span> 
-            <input type="text" class="form-control" placeholder="お気に入り数" name="min_faves" >
+            <input type="text" class="form-control" placeholder="お気に入り数" name="min_faves"  value="<?=$min_faves?>" >
           </div>
       </div>
       <div class="form-group">
@@ -298,7 +331,7 @@ $rtn_tab2 = "favicon-192x192.png";
             <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
             </span> 
-            <input type="text" class="form-control" placeholder="リプライ数" name="min_replies" >
+            <input type="text" class="form-control" placeholder="リプライ数" name="min_replies"  value="<?=$min_replies?>" >
           </div>
       </div>
       <legend class="t1-legend"><span>ユーザー名</span></legend>
@@ -307,7 +340,7 @@ $rtn_tab2 = "favicon-192x192.png";
             <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
             </span> 
-            <input type="text" class="form-control" placeholder="次のアカウントからのツイート" name="from" >
+            <input type="text" class="form-control" placeholder="次のアカウントのツイート" name="from"  value="<?=$from?>" >
           </div>
       </div>
       <div class="form-group">
@@ -315,7 +348,7 @@ $rtn_tab2 = "favicon-192x192.png";
             <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
             </span> 
-            <input type="text" class="form-control" placeholder="次のアカウントへの返信" name="to" >
+            <input type="text" class="form-control" placeholder="次のアカウントからのツイート" name="to"  value="<?=$to?>" >
           </div>
       </div>
       <div class="form-group">
@@ -323,16 +356,16 @@ $rtn_tab2 = "favicon-192x192.png";
             <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
             </span> 
-            <input type="text" class="form-control" placeholder="次のアカウントへの@ツイート" name="ref" >
+            <input type="text" class="form-control" placeholder="@スクリーンネームのツイート" name="name"  value="<?=$name?>" >
           </div>
       </div>
-  <!--     <legend class="t1-legend"><span>場所</span></legend>
+      <legend class="t1-legend"><span>場所</span></legend>
       <div class="form-group">
           <div class="input-group input-group-lg">
             <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
             </span> 
-            <input type="text" class="form-control" placeholder="次の場所の周辺" name="place_id" >
+            <input type="text" class="form-control" placeholder="次の場所の周辺" name="near"  value="<?=$near?>" >
           </div>
       </div>
       <div class="form-group">
@@ -365,18 +398,18 @@ $rtn_tab2 = "favicon-192x192.png";
               </label>
             </div>
           </div>
-        </div> -->
+        </div>
       <legend class="t1-legend"><span>日付</span></legend>
       <div class="form-group">
           <div class="input-group input-group-lg">
             <span class="input-group-addon">
               <span class="glyphicon glyphicon-calendar" style="color:red;"></span>
             </span>
-            <input type="text" id="since" class="form-control" placeholder="YYYY-MM-DD" name="since" >
+            <input type="text" id="since" class="form-control" placeholder="YYYY-MM-DD" name="since"  value="<?=$since?>" >
             <span class="input-group-addon">
             -
             </span>
-            <input type="text" id="until" class="form-control" placeholder="YYYY-MM-DD" name="until"  >
+            <input type="text" id="until" class="form-control" placeholder="YYYY-MM-DD" name="until"   value="<?=$until?>" >
           </div>
       </div>    
       <legend class="t1-legend"><span>フィルター</span></legend>
@@ -436,7 +469,7 @@ $rtn_tab2 = "favicon-192x192.png";
 
 
     <div class="row col-md-12 " style="margin-top: 20px;">
-      <?php echo $rtn_ifream_st; ?>
+      <?php echo $rtn_st; ?>
     </div>
 
     <!-- <iframe src="http://pixabay.com/" frameborder="1" width="600" height="600" style="width:100%;"></iframe> -->
