@@ -47,8 +47,8 @@ $from = isset($_GET['from']) ? $_GET['from'] : "";
 $to = isset($_GET['to']) ? $_GET['to'] : "";
 $name = isset($_GET['name']) ? $_GET['name'] : "";
 
-$near = isset($_GET['near']) ? $_GET['near'] : "";
-$near = str_replace("　", " ", $near);
+$geocode = isset($_GET['geocode']) ? $_GET['geocode'] : "";
+// $near = str_replace("　", " ", $near);
 $within = isset($_GET['within']) ? $_GET['within'] : "";
 $units = isset($_GET['units']) ? $_GET['units'] : "";
 
@@ -91,55 +91,23 @@ if($mode=="go")
     }
     if($tag)//ハッシュタグ
     {
-      $q_st .= ' '.$tag;
+      $tag_arr = explode( ' ', $tag );
+      foreach($tag_arr as $tag_itm)
+      { 
+        $q_st .= urlencode(' '.$tag_itm);
+      }
     }
+    $q_st .= (is_numeric($min_retweets)&&$min_retweets>0) ? ' min_retweets:'.$min_retweets : '';//リツィート数
+    $q_st .= (is_numeric($min_faves)&&$min_faves>0) ? ' min_faves:'.$min_faves : '';//お気に入り数
+    $q_st .= (is_numeric($min_replies)&&$min_replies>0) ? ' min_replies:'.$min_replies : '';//リプライ
     // 
-    if(is_numeric($min_retweets)&&$min_retweets>0)//リツィート数  
-    {
-      $q_st .= ' min_retweets:'.$min_retweets;
-    }
-    if(is_numeric($min_faves)&&$min_faves>0)//お気に入り数  
-    {
-      $q_st .= ' min_faves:'.$min_faves;
-    }
-    if(is_numeric($min_replies)&&$min_replies>0)//リプライ
-    {
-      $q_st .= ' min_replies:'.$min_replies;
-    }
+    $q_st .=  ($name) ? $name : '';//スクリーンネーム
+    $q_st .=  ($from) ? ' from:'.$from : '';//リプライ
+    $q_st .=  ($to) ? ' to:'.$to : '';//リプライ
     // 
-    if($name)//スクリーンネーム
-    {
-      if(strpos($name,'@')===false){
-        $q_st .= ' @'.$name;
-      }else{
-        $q_st .= ' '.$name;
-      }
-    }
-    if($from)//ユーザーあてリプライ
-    {
-      if(strpos($from,'@')===false){
-        $q_st .= ' from:@'.$from;
-      }else{
-        $q_st .= ' from:'.$from;
-      }
-    }
-    if($to)//ユーザーあてリプライ
-    {
-      if(strpos($to,'@')===false){
-        $q_st .= ' to:@'.$to;
-      }else{
-        $q_st .= ' to:'.$to;
-      }
-    }
+    $q_st .=  ($since) ? ' since:'.$since : '';//日付
+    $q_st .=  ($until) ? ' until:'.$until : '';//日付
 
-    if($since)//日付
-    {
-      $q_st .= ' since:'.$since;
-    }
-    if($until)//日付
-    {
-      $q_st .= ' until:'.$until;
-    }
     if($filter)//filter
     {
       $filter_itm_st = "";
@@ -165,28 +133,20 @@ if($mode=="go")
       }
     }
     // 
-    if($near)//attd
+    if($geocode)//attd
     {
-      $near_arr = explode( ' ', $near );
-      $near_itm_st = "";
-      $i=1;
-      foreach($near_arr as $near_itm)
-      { 
-        if($i==1)
-        {
-          $near_itm_st .= $near_itm;
+      // $google_geocode = postNumber2Address($geocode);
+      $google_geocode = place2Address($geocode);
+      
+      if($google_geocode)
+      {
+        if($within){
+          $q_st .= " geocode:".$google_geocode['lat'].",".$google_geocode['lng'] .",".$within.$units;
         }else{
-          $near_itm_st .= ' '.$near_itm;
+          $q_st .= " geocode:".$google_geocode['lat'].",".$google_geocode['lng'] .",100".$units;
         }
-        $i++;
       }
-      $q_st .= ' near:'.$near_itm_st;
     }
-    if($within)
-    {
-        $q_st .= ' within:'.$within.$units;
-    }
-
     // echo  "<br>".$q_st;
     $options = ['q' => $q_st, 'lang'=>$lang ,'count' => $cnt , 'result_type'=>'mixed'];//言語
     echo  "<!-- options=".var_dump($options)."-->";
@@ -360,14 +320,23 @@ $rtn_tab2 = "favicon-192x192.png";
           </div>
       </div>
       <legend class="t1-legend"><span>場所</span></legend>
+      <!-- パラメータ値は“latitude,longitude,radius”と指定し、radius の部分には“mi” (マイル) か “km” ) -->
       <div class="form-group">
+          <div class="input-group input-group-lg">
+            <span class="input-group-addon">
+              <span class="glyphicon glyphicon-pencil"></span>
+            </span> 
+            <input type="text" class="form-control" placeholder="地名・郵便番号" name="geocode"  value="<?=$geocode?>" >
+          </div>
+      </div>
+<!--       <div class="form-group">
           <div class="input-group input-group-lg">
             <span class="input-group-addon">
               <span class="glyphicon glyphicon-pencil"></span>
             </span> 
             <input type="text" class="form-control" placeholder="次の場所の周辺" name="near"  value="<?=$near?>" >
           </div>
-      </div>
+      </div> -->
       <div class="form-group">
             <div class="input-group input-group-lg">
               <span class="input-group-addon">
@@ -398,7 +367,8 @@ $rtn_tab2 = "favicon-192x192.png";
               </label>
             </div>
           </div>
-        </div>
+       </div>
+
       <legend class="t1-legend"><span>日付</span></legend>
       <div class="form-group">
           <div class="input-group input-group-lg">

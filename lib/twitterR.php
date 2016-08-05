@@ -118,9 +118,12 @@ function f_disp_result($statuses)
 		$tweet_icon = $tweet->user->profile_image_url;
 		$tweet_date = date('Y-m-d H:i:s', strtotime($tweet->created_at)) ;
 		// 	
-		foreach($tweet->entities->hashtags as $hashtag) 
+		if (is_array($tweet->entities->media)) 
 		{
-			$tweet_hashtag .= $hashtag->text.",";
+			foreach($tweet->entities->hashtags as $hashtag) 
+			{
+				$tweet_hashtag .= $hashtag->text.",";
+			}
 		}
 		// echo "<br>tweet_hashtag=".$tweet_hashtag;
 		// 
@@ -145,7 +148,9 @@ function f_disp_result($statuses)
         // タブ用画像パス
         $img_path = $tweet_img;
         $url_ch = "detail.php?id=".$id;
-        $rtn_st .= '<div class="col-xs-12 col-sm-6 col-md-4 col-lg-2" >';
+        $rtn_st .= '<div class="col-xs-12 col-sm-6 col-md-4 col-lg-2 " style="display:inline-block;" >';
+        // $rtn_st .= '<div class="col-xs-12 col-sm-6 col-md-4 col-lg-2 heightLineParent"  >';
+        // $rtn_st .= '<div class="col-xs-12 col-sm-6 col-md-4 col-lg-2 "  >';
         $rtn_st .= '<div class="thumbnail  ">';
         $rtn_st .= '<a href="'.$url_ch.'"><img  src="'.$img_path.'">';
         $rtn_st .= '<div class="caption">';
@@ -190,3 +195,52 @@ function f_disp_result($statuses)
 	$rtn_st .= '</div>';
 	return $rtn_st;
 }
+// 郵便番号からジオコード
+function postNumber2Address($postNumber = NULL){
+  $returnArray = array();
+  if($postNumber === NULL || preg_match('/^\d{7}$/', $postNumber) !== 1) return false;
+
+  $googleMapsApiData = json_decode(@file_get_contents('http://maps.googleapis.com/maps/api/geocode/json?sensor=false&language=ja&address='.$postNumber), true);
+  if($googleMapsApiData['status'] !== 'OK') return false;
+
+  $addressArray = $googleMapsApiData['results'][0]['address_components'];
+  unset($addressArray[0]);
+  array_pop($addressArray);
+  $addressArray = array_reverse($addressArray);
+  $returnArray['tdfk'] = $addressArray[0]['long_name'];
+  unset($addressArray[0]);
+
+  $skcsStrings = '';
+  foreach($addressArray as $v) $skcsStrings .= $v['long_name'];
+  $returnArray['skcs'] = $skcsStrings;
+
+  $returnArray['lat'] = $googleMapsApiData['results'][0]['geometry']['location']['lat'];
+  $returnArray['lng'] = $googleMapsApiData['results'][0]['geometry']['location']['lng'];
+
+  return $returnArray;
+}
+// 地名からジオコード
+function place2Address($postNumber = NULL){
+  $returnArray = array();
+  // if($postNumber === NULL || preg_match('/^\d{7}$/', $postNumber) !== 1) return false;
+
+  $googleMapsApiData = json_decode(@file_get_contents('http://maps.googleapis.com/maps/api/geocode/json?sensor=false&language=ja&address='.$postNumber), true);
+  if($googleMapsApiData['status'] !== 'OK') return false;
+
+  $addressArray = $googleMapsApiData['results'][0]['address_components'];
+  unset($addressArray[0]);
+  array_pop($addressArray);
+  $addressArray = array_reverse($addressArray);
+  $returnArray['tdfk'] = $addressArray[0]['long_name'];
+  unset($addressArray[0]);
+
+  $skcsStrings = '';
+  foreach($addressArray as $v) $skcsStrings .= $v['long_name'];
+  $returnArray['skcs'] = $skcsStrings;
+
+  $returnArray['lat'] = $googleMapsApiData['results'][0]['geometry']['location']['lat'];
+  $returnArray['lng'] = $googleMapsApiData['results'][0]['geometry']['location']['lng'];
+
+  return $returnArray;
+}
+?>

@@ -23,4 +23,6 @@ $footer_sitename = "ソーシャルハブ";
 <!-- おしゃれチェックボックス -->
 <!-- <script src="//gitcdn.github.io/bootstrap-toggle/2.2.0/js/bootstrap-toggle.min.js"></script> -->
 
-
+<!-- 要素高揃え -->
+<!-- <script src="js/heightLine.js"></script> -->
+<!-- <script src="js/masonry.pkgd.min.js"></script> -->

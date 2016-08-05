@@ -366,7 +366,7 @@ function f_get_img_page($db_conn,$page_size,$page,$target_page,$search_tag)
         // タブ用画像パス
         $img_path = $tweet_img;
         $url_ch = "detail.php?id=".$id;
-        $rtn_st .= '<div class="col-xs-12 col-sm-6 col-md-4 col-lg-2" >';
+        $rtn_st .= '<div class="col-xs-12 col-sm-6 col-md-4 col-lg-2 "  style="display:inline-block;">';
         $rtn_st .= '<div class="thumbnail  ">';
         $rtn_st .= '<a href="'.$url_ch.'"><img '.($del_flg==0 ? 'class="img-circle" style="border:5px solid #FF0000;"':'').' src="'.$img_path.'">';
         $rtn_st .= '<div class="caption">';
@@ -457,7 +457,8 @@ function f_get_tile_page($db_conn,$page_size,$page,$target_page)
       // 
       $from_cnt = $cur_cnt-$numrows+1;
       $rtn_st = '';
-      $rtn_st .= '<div class="col-xs-12 col-md-12" >';
+      $rtn_st .= '<div class="col-xs-12 col-md-12 " style="display:inline-block;">';
+
       $rtn_st .=   '<h5 class="col-md-8" style="margin-bottom: 20px;;font-weight:200;1px;text-shadow:1px1px 0 rgba(0,0,0,0.1);color:#fff;">'."\n";
       $rtn_st .= $search_tag_st."(".number_format($page_all_cnt)."点中".number_format($from_cnt)."-".number_format($cur_cnt)."点表示)".number_format($page)."/".number_format($page_count)."ページ";
       $rtn_st .= '</h5>';
@@ -471,7 +472,7 @@ function f_get_tile_page($db_conn,$page_size,$page,$target_page)
         // タブ用画像パス
         $img_path = $tweet_img;
         $url_ch = "detail.php?id=".$id;
-        $rtn_st .= '<div class="col-xs-12 col-sm-6 col-md-4 col-lg-2" >';
+        $rtn_st .= '<div class="col-xs-12 col-sm-6 col-md-4 col-lg-2 " >';
         $rtn_st .= '<div class="thumbnail  ">';
         $rtn_st .= '<a href="'.$url_ch.'"><img  src="'.$img_path.'">';
         $rtn_st .= '</div>';
@@ -558,4 +559,5 @@ function pager($page,$page_all_cnt,$page_size,$target_page,$pager_url)
   // 
   return $rtn_st;
 }
+
 ?>
