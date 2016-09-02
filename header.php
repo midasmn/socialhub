@@ -79,6 +79,8 @@
 	<script type="text/javascript" async defer
   		src="https://apis.google.com/js/platform.js?publisherid=107664182547620758913">
 	</script>
+	<!-- 1行コードツール -->
+	<script src="https://stackpile.io/stack_161613.js" async="async"></script>
   </head>
  
 
